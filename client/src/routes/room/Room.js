@@ -3,6 +3,8 @@ import AceEditor from "react-ace";
 import { Toaster, toast } from 'react-hot-toast';
 import { useNavigate, useParams } from "react-router-dom";
 import { generateColor } from "../../utils";
+import { useMemo } from 'react';
+
 import './Room.css'
 
 import "ace-builds/src-noconflict/mode-javascript";
@@ -31,7 +33,9 @@ export default function Room({ socket }) {
   const [language, setLanguage] = useState(() => "javascript")
   const [codeKeybinding, setCodeKeybinding] = useState(() => undefined)
   const [isFirstUser, setIsFirstUser] = useState(false);
-  const userReadonlyMap = new Map();
+
+  const userReadonlyMap = useMemo(() => new Map(), []); 
+
 
   const languagesAvailable = ["javascript"]
   const codeKeybindingsAvailable = ["default", "emacs", "vim"]
@@ -70,18 +74,17 @@ export default function Room({ socket }) {
 
   useEffect(() => {
     socket.on("updating client list", ({ userslist }) => {
-      setFetchedUsers(userslist)
-    })
-
+      setFetchedUsers(userslist);
+    });
   
     socket.on("on language change", ({ languageUsed }) => {
-      setLanguage(languageUsed)
-    })
-
+      setLanguage(languageUsed);
+    });
+  
     socket.on("on code change", ({ code }) => {
-      setFetchedCode(code)
-    })
-
+      setFetchedCode(code);
+    });
+  
     socket.on("new member joined", ({ username }) => {
       if (!isFirstUser) {
         userReadonlyMap.set(username, true);
@@ -89,34 +92,33 @@ export default function Room({ socket }) {
       } else {
         userReadonlyMap.set(username, false);
       }
-      toast(`${username} joined`)
-    })
-
+      toast(`${username} joined`);
+    });
+  
     socket.on("member left", ({ username }) => {
-      toast(`${username} left`)
-        // Find the current first user
+      toast(`${username} left`);
       const currentFirstUser = Array.from(userReadonlyMap.keys())[0];
-
-      // If there is a first user, set their readonly to true
+  
       if (currentFirstUser) {
         userReadonlyMap.set(currentFirstUser, true);
         setIsFirstUser(true);
       } else {
         setIsFirstUser(false);
       }
-    })
-
+    });
+  
     const backButtonEventListner = window.addEventListener("popstate", function (e) {
-      const eventStateObj = e.state
+      const eventStateObj = e.state;
       if (!('usr' in eventStateObj) || !('username' in eventStateObj.usr)) {
-        socket.disconnect()
+        socket.disconnect();
       }
     });
-
+  
     return () => {
-      window.removeEventListener("popstate", backButtonEventListner)
-    }
-  }, [socket])
+      window.removeEventListener("popstate", backButtonEventListner);
+    };
+  }, [isFirstUser, socket,userReadonlyMap]);
+  
 
   return (
     <div className="room">

@@ -1,45 +1,36 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { v4 as uuidv4, validate } from 'uuid';
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { v4 as validate } from 'uuid';
 import { Toaster, toast } from 'react-hot-toast';
-import './JoinRoom.css'
+import './JoinRoom.css';
 
 export default function JoinRoom() {
-    const navigate = useNavigate()
-    const [roomId, setRoomId] = useState(() => "")
-    const [username, setUsername] = useState(() => "")
+    const navigate = useNavigate();
+    const { blockNumber } = useParams();
+    const [roomId, setRoomId] = useState(blockNumber);
+    const [username, setUsername] = useState("");
 
     function handleRoomSubmit(e) {
-        e.preventDefault()
+        e.preventDefault();
         if (!validate(roomId)) {
-            toast.error("Incorrect room ID")
-            return
+            toast.error("Incorrect room ID");
+            return;
         }
-        username && navigate(`/room/${roomId}`, { state: { username } })
-    }
-
-    function createRoomId(e) {
-        try {
-            setRoomId(uuidv4())
-            toast.success("Room created")
-        } catch (exp) {
-            console.error(exp)
-        }
+        username && navigate(`/room/${roomId}`, { state: { username } });
     }
 
     return (
         <div className="joinBoxWrapper">
             <form className="joinBox" onSubmit={handleRoomSubmit}>
-                <p>Paste your invitation code down below</p>
-
+                <p>Enter your name</p>
                 <div className="joinBoxInputWrapper">
                     <input
                         className="joinBoxInput"
                         id="roomIdInput"
-                        type="text"
+                        type="hidden"
                         placeholder="Enter room ID"
                         required
-                        onChange={(e) => { setRoomId(e.target.value) }}
+                        onChange={(e) => { setRoomId(e.target.value); }}
                         value={roomId}
                         autoSave="off"
                         autoComplete="off"
@@ -55,7 +46,7 @@ export default function JoinRoom() {
                         placeholder="Enter Guest Username"
                         required
                         value={username}
-                        onChange={e => { setUsername(e.target.value) }}
+                        onChange={(e) => { setUsername(e.target.value); }}
                         autoSave="off"
                         autoComplete="off"
                     />
@@ -63,12 +54,8 @@ export default function JoinRoom() {
                 </div>
 
                 <button className="joinBoxBtn" type="submit">Join</button>
-                <p>get an invite code<span
-                    style={{ textDecoration: "underline", cursor: "pointer" }}
-                    onClick={createRoomId}
-                > here</span></p>
             </form>
             <Toaster />
         </div>
-    )
+    );
 }
