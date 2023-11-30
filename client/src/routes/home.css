@@ -1,0 +1,37 @@
+.homepage {
+    background-image: url('/../client/public/back2.jpg');
+    background-size: cover;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    
+}
+.homepage h1 {
+    color: #ffffff;
+    font-size: 45px;
+    margin-top: 10%;
+
+}
+.blockButton {
+    padding: 13px 20px;
+    color: white;
+    width: 150%;
+    background-color: rgb(31, 221, 255);
+    border: 1px solid rgb(31, 221, 255);
+    outline: none;
+    border-radius: 2px;
+    font-size: 85%;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.45s ease-in-out 0.05s;
+    
+}
+
+.blockButton:hover {
+    color: black;
+    background-color: white;
+}
+
+.buttons {
+    margin-bottom: 15%;
+}

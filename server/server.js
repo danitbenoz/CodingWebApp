@@ -1,8 +1,10 @@
+const { MongoClient } = require('mongodb');
+
 const app = require('express')()
 const http = require('http')
 const { Server } = require('socket.io')
 const cors = require("cors")
-
+const mongoose = require("mongoose");
 app.use(cors())
 
 const server = http.createServer(app)
@@ -13,6 +15,80 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 })
+
+async function main() {
+  //connecting to MongoDB
+  const uri = "mongodb+srv://danitbenoz2:Danit%40120@cluster0.altzoi2.mongodb.net/CodeApp?retryWrites=true&w=majority"
+
+  // Create a new MongoClient
+  const client = new MongoClient(uri);
+  // console.log(client.db('CodeApp').collection('codes').find({"room_id": "1"}));
+  try{
+    await client.connect();
+    const cursor = client.db('CodeApp').collection('codes').find({ room_id: "1" });
+    const documents = await cursor.toArray();
+    console.log(documents);
+
+    await listDatabases(client)
+    console.log("Connected to MongoDB");
+  }
+  catch(e){
+    console.error(e);
+  } finally {
+    await client.close();
+  }
+}
+
+main().catch(console.error);
+
+async function listDatabases(client){
+ const databaseList = await client.db().admin().listDatabases();
+ console.log("Databases:");
+ databaseList.databases.forEach(db=>{
+  console.log(`-${db.name}`);
+ })
+
+}
+
+
+// async function connect(){
+//   try{
+//     await mongoose.connect(uri);
+//     console.log("Connected to MongoDB");
+//   } catch(error) {
+//     console.error(error);
+//   }
+// }
+// connect();
+
+// const codeSchema = new mongoose.Schema({
+//   roomId: { type: String, required: true },
+//   code: { type: String, required: true },
+// });
+
+// const Code = mongoose.model('Code', codeSchema);
+
+// module.exports = Code;
+
+// app.post('/api/save-code', async (req, res) => {
+//   const { roomId, code } = req.body;
+
+//   console.log('Received save-code request:', { roomId, code });
+
+//   try {
+//     // Save code to MongoDB
+//     const newCode = new Code({ roomId, code });
+//     await newCode.save();
+
+//     console.log('Code saved successfully.');
+
+//     res.status(200).json({ success: true });
+//   } catch (error) {
+//     console.error('Error saving code to MongoDB:', error);
+//     res.status(500).json({ success: false, error: 'Internal Server Error' });
+//   }
+// });
+
 
 app.get('/', function (req, res) {
   res.send('Hello from the server!')
@@ -129,3 +205,7 @@ const PORT = process.env.PORT || 5000
 server.listen(PORT, function () {
   console.log(`listening on port : ${PORT}`)
 })
+
+
+
+

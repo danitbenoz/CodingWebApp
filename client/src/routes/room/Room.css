@@ -1,5 +1,6 @@
 .room {
     display: flex;
+    background-image: url('/../client/public/back2.jpg');
     flex-direction: column;
     gap: 10px;
     min-height: 100vh;
@@ -30,37 +31,21 @@
     flex: 1;
 }
 
-.roomSidebarCopyBtn {
-    font-size: 75%;
-    font-weight: bold;
-    padding: 8px 15px;
-    color: white;
-    background-color: #00ffae;
-    border: 1px solid #00ffae;
-    outline: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.45s ease-in-out 0.05s;
-}
-.roomSidebarCopyBtn:hover {
-    color: black;
-    background-color: white;
-}
 
 .roomSidebarBtn {
     font-size: 75%;
     font-weight: bold;
     padding: 10px 15px;
-    background-color: white;
-    border: 1px solid black;
+    background-color: rgb(31, 221, 255);
+    border: 1px solid rgb(31, 221, 255);
     outline: none;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.45s ease-in-out 0.05s;
 }
 .roomSidebarBtn:hover {
-    color: white;
-    background-color: black;
+    color: black;
+    background-color: white;
 }
 
 .roomSidebarUsersWrapper {
@@ -76,7 +61,12 @@
     flex-wrap: wrap;
     gap: 10px;
 }
+.roomSidebarUsers p {
+    color: #ffffff;
+    font-size: 15px;
+    margin-top: 10%;
 
+}
 .roomSidebarUsersEach {
     display: grid;
     justify-items: center;

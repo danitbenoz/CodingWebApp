@@ -12,5 +12,8 @@
   "license": "ISC",
   "devDependencies": {
     "react-scripts": "^5.0.1"
+  },
+  "dependencies": {
+    "mongoose": "^8.0.2"
   }
 }

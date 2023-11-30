@@ -34,8 +34,18 @@ export default function Room({ socket }) {
   const [isFirstUser, setIsFirstUser] = useState(false);
 
   const userReadonlyMap = useMemo(() => new Map(), []); 
-
+  const codeInput = fetchedCode;
   const languagesAvailable = ["javascript"]
+
+
+// Assuming you're using the fetch API for the POST request
+
+
+
+const saveCode = async () => {
+
+};
+
 
   function onChange(newValue) {
     setFetchedCode(newValue)
@@ -150,6 +160,7 @@ export default function Room({ socket }) {
               ))}
             </div>
           </div>
+          <button className="roomSidebarBtn" onClick={saveCode}>save</button>
 
           <button className="roomSidebarBtn" onClick={() => {
             handleLeave();
