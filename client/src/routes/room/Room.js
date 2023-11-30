@@ -31,16 +31,11 @@ export default function Room({ socket }) {
   const [fetchedUsers, setFetchedUsers] = useState(() => [])
   const [fetchedCode, setFetchedCode] = useState(() => "")
   const [language, setLanguage] = useState(() => "javascript")
-  const [codeKeybinding, setCodeKeybinding] = useState(() => undefined)
   const [isFirstUser, setIsFirstUser] = useState(false);
 
   const userReadonlyMap = useMemo(() => new Map(), []); 
 
-
   const languagesAvailable = ["javascript"]
-  const codeKeybindingsAvailable = ["default", "emacs", "vim"]
-
-
 
   function onChange(newValue) {
     setFetchedCode(newValue)
@@ -52,10 +47,6 @@ export default function Room({ socket }) {
     setLanguage(e.target.value)
     socket.emit("update language", { roomId, languageUsed: e.target.value })
     socket.emit("syncing the language", { roomId: roomId })
-  }
-
-  function handleCodeKeybindingChange(e) {
-    setCodeKeybinding(e.target.value === "default" ? undefined : e.target.value)
   }
 
   function handleLeave() {
@@ -71,8 +62,22 @@ export default function Room({ socket }) {
       console.error(exp)
     }
   }
+  const getTitleForRoomId = (roomId) => {
+    const titleMap = {
+      "97272752-3e0f-4bcc-8392-fde0fb26f75d": "Block number 1",
+      "1d812931-105d-4bc8-b265-939835937b68": "Block number 2",
+      "2d28a898-2cb2-4e07-9b12-0e55051f007d": "Block number 3",
+      "020126e4-3fb0-478e-86a4-4bfcda27eaab": "Block number 4",
+
+      // Add more room IDs and corresponding titles as needed
+    };
+
+    return titleMap[roomId] || "Default Title"; // Default title for other room IDs
+  };
+
 
   useEffect(() => {
+
     socket.on("updating client list", ({ userslist }) => {
       setFetchedUsers(userslist);
     });
@@ -113,7 +118,7 @@ export default function Room({ socket }) {
         socket.disconnect();
       }
     });
-  
+
     return () => {
       window.removeEventListener("popstate", backButtonEventListner);
     };
@@ -121,68 +126,60 @@ export default function Room({ socket }) {
   
 
   return (
-    <div className="room">
-      <div className="roomSidebar">
-        <div className="roomSidebarUsersWrapper">
-          <div className="languageFieldWrapper">
-            <select className="languageField" name="language" id="language" value={language} onChange={handleLanguageChange}>
-              {languagesAvailable.map(eachLanguage => (
-                <option key={eachLanguage} value={eachLanguage}>{eachLanguage}</option>
+    <><div className="title">
+      <center><p>{getTitleForRoomId(roomId)}</p></center>
+    </div><div className="room">
+        <div className="roomSidebar">
+          <div className="roomSidebarUsersWrapper">
+            <div className="languageFieldWrapper">
+              <select className="languageField" name="language" id="language" value={language} onChange={handleLanguageChange}>
+                {languagesAvailable.map(eachLanguage => (
+                  <option key={eachLanguage} value={eachLanguage}>{eachLanguage}</option>
+                ))}
+              </select>
+            </div>
+
+          
+            <div className="roomSidebarUsers">
+              <p>Connected Users:</p>
+              {fetchedUsers.map((each) => (
+                <div key={each} className="roomSidebarUsersEach">
+                  <div className="roomSidebarUsersEachAvatar" style={{ backgroundColor: `${generateColor(each)}` }}>{each.slice(0, 2).toUpperCase()}</div>
+                  <div className="roomSidebarUsersEachName">{each}</div>
+                </div>
               ))}
-            </select>
+            </div>
           </div>
 
-          <div className="languageFieldWrapper">
-            <select className="languageField" name="codeKeybinding" id="codeKeybinding" value={codeKeybinding} onChange={handleCodeKeybindingChange}>
-              {codeKeybindingsAvailable.map(eachKeybinding => (
-                <option key={eachKeybinding} value={eachKeybinding}>{eachKeybinding}</option>
-              ))}
-            </select>
-          </div>
-
-          <p>Connected Users:</p>
-          <div className="roomSidebarUsers">
-            {fetchedUsers.map((each) => (
-              <div key={each} className="roomSidebarUsersEach">
-                <div className="roomSidebarUsersEachAvatar" style={{ backgroundColor: `${generateColor(each)}` }}>{each.slice(0, 2).toUpperCase()}</div>
-                <div className="roomSidebarUsersEachName">{each}</div>
-              </div>
-            ))}
-          </div>
+          <button className="roomSidebarBtn" onClick={() => {
+            handleLeave();
+          } }>Leave</button>
         </div>
 
-        <button className="roomSidebarCopyBtn" onClick={() => { copyToClipboard(roomId) }}>Copy Room id</button>
-        <button className="roomSidebarBtn" onClick={() => {
-          handleLeave()
-        }}>Leave</button>
-      </div>
-
-      <AceEditor
-        placeholder="Write your code here."
-        className="roomCodeEditor"
-        mode={language}
-        keyboardHandler={codeKeybinding}
-        theme="monokai"
-        name="collabEditor"
-        width="auto"
-        height="auto"
-        value={fetchedCode}
-        onChange={onChange}
-        fontSize={15}
-        showPrintMargin={true}
-        showGutter={true}
-        highlightActiveLine={true}
-        enableLiveAutocompletion={true}
-        enableBasicAutocompletion={false}
-        enableSnippets={false}
-        wrapEnabled={true}
-        readOnly = {isFirstUser}
-        tabSize={2}
-        editorProps={{
-          $blockScrolling: true
-        }}
-      />
-      <Toaster />
-    </div>
+        <AceEditor
+          placeholder="Write your code here."
+          className="roomCodeEditor"
+          mode={language}
+          theme="monokai"
+          name="collabEditor"
+          width="auto"
+          height="auto"
+          value={fetchedCode}
+          onChange={onChange}
+          fontSize={15}
+          showPrintMargin={true}
+          showGutter={true}
+          highlightActiveLine={true}
+          enableLiveAutocompletion={true}
+          enableBasicAutocompletion={false}
+          enableSnippets={false}
+          wrapEnabled={true}
+          readOnly={isFirstUser}
+          tabSize={2}
+          editorProps={{
+            $blockScrolling: true
+          }} />
+        <Toaster />
+      </div></>
   )
 }

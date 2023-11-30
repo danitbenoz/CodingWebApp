@@ -16,13 +16,13 @@ export default function JoinRoom() {
             toast.error("Incorrect room ID");
             return;
         }
-        username && navigate(`/room/${roomId}`, { state: { username } });
+        username && navigate(`/room/${roomId}`, { state: { username, blockNumber } });
     }
 
     return (
         <div className="joinBoxWrapper">
             <form className="joinBox" onSubmit={handleRoomSubmit}>
-                <p>Enter your name</p>
+                <center><p>Join box</p></center>
                 <div className="joinBoxInputWrapper">
                     <input
                         className="joinBoxInput"
@@ -43,7 +43,7 @@ export default function JoinRoom() {
                         className="joinBoxInput"
                         id="usernameInput"
                         type="text"
-                        placeholder="Enter Guest Username"
+                        placeholder="Enter your Username"
                         required
                         value={username}
                         onChange={(e) => { setUsername(e.target.value); }}

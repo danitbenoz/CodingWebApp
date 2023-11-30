@@ -9,7 +9,8 @@
     width: 300px;
     display: grid;
     padding: 30px 15px;
-    gap: 15px;
+    font-size: 150%;
+    gap: 9.5px;
     border: 2px solid rgb(237, 234, 234);
     border-radius: 10px;
     box-shadow: 0 0 15px 15px rgb(235, 234, 234);
@@ -23,11 +24,12 @@
     border: 1px solid #00ffae;
     outline: none;
     border-radius: 25px;
-    font-size: 75%;
+    font-size: 55%;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.45s ease-in-out 0.05s;
 }
+
 .joinBoxBtn:hover {
     color: black;
     background-color: white;
