@@ -24,7 +24,6 @@ import "ace-builds/src-noconflict/theme-monokai";
 import "ace-builds/src-noconflict/ext-language_tools";
 import "ace-builds/src-noconflict/ext-searchbox";
 
-
 export default function Room({ socket }) {
   const navigate = useNavigate()
   const { roomId } = useParams()
