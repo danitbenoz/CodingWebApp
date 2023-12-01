@@ -16,10 +16,8 @@ import "ace-builds/src-noconflict/mode-golang";
 import "ace-builds/src-noconflict/mode-c_cpp";
 import "ace-builds/src-noconflict/mode-html";
 import "ace-builds/src-noconflict/mode-css";
-
 import "ace-builds/src-noconflict/keybinding-emacs";
 import "ace-builds/src-noconflict/keybinding-vim";
-
 import "ace-builds/src-noconflict/theme-monokai";
 import "ace-builds/src-noconflict/ext-language_tools";
 import "ace-builds/src-noconflict/ext-searchbox";
@@ -33,21 +31,60 @@ export default function Room({ socket }) {
   const [isFirstUser, setIsFirstUser] = useState(false);
 
   const userReadonlyMap = useMemo(() => new Map(), []); 
-  const codeInput = fetchedCode;
+
   const languagesAvailable = ["javascript"]
 
+const [currentCode, setCurrentCode] = useState(() => ""); //stores the current code
 
-// Assuming you're using the fetch API for the POST request
-
-
+  // New state to hold the initial code fetched from the database
+  const [initialCode, setInitialCode] = useState(() => "");
 
 const saveCode = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/saveCode', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ roomId, code: currentCode }), // Use the current code from state
+    });
 
+    const data = await response.json();
+    if (data.success) {
+      toast.success('Code saved successfully.');
+    } else {
+      toast.error('Failed to save code.');
+    }
+  } catch (error) {
+    console.error('Error saving code:', error);
+    toast.error('Failed to save code. Please try again.');
+  }
 };
+
+
+  const fetchCode = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/getCode/${roomId}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setInitialCode(data.code);
+        setFetchedCode(data.code);
+        setCurrentCode(data.code);
+
+      } else {
+        console.error('Failed to fetch code:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching code:', error);
+    }
+  };
+
 
 
   function onChange(newValue) {
     setFetchedCode(newValue)
+    setCurrentCode(newValue)
     socket.emit("update code", { roomId, code: newValue })
     socket.emit("syncing the code", { roomId: roomId })
   }
@@ -63,29 +100,25 @@ const saveCode = async () => {
     !socket.connected && navigate('/', { replace: true, state: {} })
   }
 
-  function copyToClipboard(text) {
-    try {
-      navigator.clipboard.writeText(text);
-      toast.success('Room ID copied')
-    } catch (exp) {
-      console.error(exp)
-    }
-  }
   const getTitleForRoomId = (roomId) => {
     const titleMap = {
       "97272752-3e0f-4bcc-8392-fde0fb26f75d": "Block number 1",
       "1d812931-105d-4bc8-b265-939835937b68": "Block number 2",
       "2d28a898-2cb2-4e07-9b12-0e55051f007d": "Block number 3",
       "020126e4-3fb0-478e-86a4-4bfcda27eaab": "Block number 4",
-
-      // Add more room IDs and corresponding titles as needed
     };
 
     return titleMap[roomId] || "Default Title"; // Default title for other room IDs
   };
 
-
   useEffect(() => {
+
+    const fetchInitialCode = async () => {
+      // Fetch the initial code when the component mounts
+      await fetchCode();
+    };
+  
+    fetchInitialCode();
 
     socket.on("updating client list", ({ userslist }) => {
       setFetchedUsers(userslist);
@@ -131,7 +164,11 @@ const saveCode = async () => {
     return () => {
       window.removeEventListener("popstate", backButtonEventListner);
     };
-  }, [isFirstUser, socket,userReadonlyMap]);
+  }, [isFirstUser, socket,userReadonlyMap,roomId]);
+
+  useEffect(() => {
+    setInitialCode(fetchedCode);
+  }, [fetchedCode, roomId]);
   
 
   return (

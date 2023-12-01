@@ -5,7 +5,9 @@ const http = require('http')
 const { Server } = require('socket.io')
 const cors = require("cors")
 const mongoose = require("mongoose");
+const bodyParser = require('body-parser'); 
 app.use(cors())
+app.use(bodyParser.json());
 
 const server = http.createServer(app)
 
@@ -16,79 +18,100 @@ const io = new Server(server, {
   }
 })
 
-async function main() {
-  //connecting to MongoDB
-  const uri = "mongodb+srv://danitbenoz2:Danit%40120@cluster0.altzoi2.mongodb.net/CodeApp?retryWrites=true&w=majority"
+// async function main() {
+//   //connecting to MongoDB
+//   const uri = "mongodb+srv://danitbenoz2:Danit%40120@cluster0.altzoi2.mongodb.net/CodeApp?retryWrites=true&w=majority"
 
-  // Create a new MongoClient
-  const client = new MongoClient(uri);
-  // console.log(client.db('CodeApp').collection('codes').find({"room_id": "1"}));
-  try{
-    await client.connect();
-    const cursor = client.db('CodeApp').collection('codes').find({ room_id: "1" });
-    const documents = await cursor.toArray();
-    console.log(documents);
-
-    await listDatabases(client)
-    console.log("Connected to MongoDB");
-  }
-  catch(e){
-    console.error(e);
-  } finally {
-    await client.close();
-  }
-}
-
-main().catch(console.error);
-
-async function listDatabases(client){
- const databaseList = await client.db().admin().listDatabases();
- console.log("Databases:");
- databaseList.databases.forEach(db=>{
-  console.log(`-${db.name}`);
- })
-
-}
-
-
-// async function connect(){
+//   // Create a new MongoClient
+//   const client = new MongoClient(uri);
+//   // console.log(client.db('CodeApp').collection('codes').find({"room_id": "1"}));
 //   try{
-//     await mongoose.connect(uri);
+//     await client.connect();
+//     const cursor = client.db('CodeApp').collection('codes').find({ room_id: "1" });
+//     const documents = await cursor.toArray();
+//     console.log(documents);
+
+//     await listDatabases(client)
 //     console.log("Connected to MongoDB");
-//   } catch(error) {
-//     console.error(error);
+//   }
+//   catch(e){
+//     console.error(e);
+//   } finally {
+//     await client.close();
 //   }
 // }
-// connect();
 
-// const codeSchema = new mongoose.Schema({
-//   roomId: { type: String, required: true },
-//   code: { type: String, required: true },
-// });
+// main().catch(console.error);
 
-// const Code = mongoose.model('Code', codeSchema);
+// async function listDatabases(client){
+//  const databaseList = await client.db().admin().listDatabases();
+//  console.log("Databases:");
+//  databaseList.databases.forEach(db=>{
+//   console.log(`-${db.name}`);
+//  })
 
-// module.exports = Code;
+// }
+//////////////
 
-// app.post('/api/save-code', async (req, res) => {
-//   const { roomId, code } = req.body;
+app.post('/saveCode', async (req, res) => {
+  const { roomId, code } = req.body;
+  let client; // Declare client here
 
-//   console.log('Received save-code request:', { roomId, code });
+  try {
+    const uri = "mongodb+srv://danitbenoz2:Danit%40120@cluster0.altzoi2.mongodb.net/CodeApp?retryWrites=true&w=majority"
+    client = new MongoClient(uri);
+    await client.connect();
+    console.log("Connected to MongoDB");
+    // Check if there's an existing document for the room
+    const existingDoc = await client.db('CodeApp').collection('codes').findOne({ room_id: roomId });
 
-//   try {
-//     // Save code to MongoDB
-//     const newCode = new Code({ roomId, code });
-//     await newCode.save();
+    if (existingDoc) {
+      // Update the existing document with the new code
+      await client.db('CodeApp').collection('codes').updateOne({ room_id: roomId }, { $set: { code: code } });
+    } else {
+      // Insert a new document if it doesn't exist
+      await client.db('CodeApp').collection('codes').insertOne({ room_id: roomId, code: code });
+    }
 
-//     console.log('Code saved successfully.');
+    res.status(200).json({ success: true, message: 'Code saved successfully.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  } finally {
+    if (client) {
+      await client.close();
+    }
+  }
+});
 
-//     res.status(200).json({ success: true });
-//   } catch (error) {
-//     console.error('Error saving code to MongoDB:', error);
-//     res.status(500).json({ success: false, error: 'Internal Server Error' });
-//   }
-// });
 
+app.get('/getCode/:roomId', async (req, res) => {
+  const { roomId } = req.params;
+
+  let client;
+
+  try {
+    const uri = "mongodb+srv://danitbenoz2:Danit%40120@cluster0.altzoi2.mongodb.net/CodeApp?retryWrites=true&w=majority"
+    const client = new MongoClient(uri);
+    await client.connect();
+
+    const codeDocument = await client.db('CodeApp').collection('codes').findOne({ room_id: roomId });
+
+    if (codeDocument) {
+      console.log(codeDocument);
+      res.json({ success: true, code: codeDocument.code });
+    } else {
+      res.json({ success: false, message: 'Code not found for the specified room ID.' });
+    }
+  } catch (error) {
+    console.error('Error fetching code:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  } finally {
+    if(client){
+      await client.close();
+    }
+  }
+});
 
 app.get('/', function (req, res) {
   res.send('Hello from the server!')
@@ -103,25 +126,21 @@ async function getUsersinRoom(roomId, io) {
   socketList.forEach((each => {
     (each in socketID_to_Users_Map) && userslist.push(socketID_to_Users_Map[each].username)
   }))
-
   return userslist
 }
 
 async function updateUserslistAndCodeMap(io, socket, roomId) {
   socket.in(roomId).emit("member left", { username: socketID_to_Users_Map[socket.id].username })
-
   // update the user list
   delete socketID_to_Users_Map[socket.id]
   const userslist = await getUsersinRoom(roomId, io)
   socket.in(roomId).emit("updating client list", { userslist: userslist })
-
   userslist.length === 0 && delete roomID_to_Code_Map[roomId]
 }
 
 //Whenever someone connects this gets executed
 io.on('connection', function (socket) {
   console.log('A user connected', socket.id)
-
   socket.on("when a user joins", async ({ roomId, username }) => {
     console.log("username: ", username)
     socketID_to_Users_Map[socket.id] = { username }
@@ -198,8 +217,6 @@ io.on('connection', function (socket) {
   })
 })
 
-//you can store your port number in a dotenv file, fetch it from there and store it in PORT
-//we have hard coded the port number here just for convenience
 const PORT = process.env.PORT || 5000
 
 server.listen(PORT, function () {
